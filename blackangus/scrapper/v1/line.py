@@ -23,7 +23,7 @@ class LineEmoticonScrapper(BaseScrapper[LineconCategoryDetailModel]):
 
         title = await page.inner_text("p.mdCMN38Item01Ttl")
         description = await page.inner_text("p.mdCMN38Item01Txt")
-        author = await page.inner_text("p.mdCMN38Item01Author")
+        author = await page.inner_text("a.mdCMN38Item01Author")
 
         items: List[LineconItemModel] = []
         json_strings = await page.evaluate(

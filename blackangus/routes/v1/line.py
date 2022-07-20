@@ -17,16 +17,21 @@ FAKE_USER_AGENT = (
 
 async def search_list_route():
     keyword = request.args.get("keyword", None)
-    page = int(request.args.get("page", "-1"))
-    limit = int(request.args.get("limit", "-1"))
+    page = int(request.args.get("page", "1"))
+    limit = int(request.args.get("limit", "10"))
 
-    if keyword is None or page == -1 or limit == -1:
-        return {
-            "result": {
-                "success": False,
-                "message": "Invalid Request Parameters",
-            }
-        }, 400
+    if keyword is None:
+        return (
+            jsonify(
+                {
+                    "result": {
+                        "success": False,
+                        "message": "Invalid Request Parameters",
+                    }
+                }
+            ),
+            400,
+        )
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -35,6 +40,7 @@ async def search_list_route():
                 "User-Agent": FAKE_USER_AGENT,
                 "X-Requested-With": "XMLHttpRequest",
                 "Referrer": f"https://store.line.me/search/sticker/ko?q={quote_plus(keyword)}",
+                "Accept-Language": "ko-KR,ko;q=0.9",
             },
             params={
                 "query": keyword,
@@ -45,7 +51,7 @@ async def search_list_route():
             },
         )
 
-        body = await response.json()
+        body = response.json()
 
         counts = body.get("totalCount", 0)
         primitive_items = body.get("items", [])
@@ -60,16 +66,21 @@ async def search_list_route():
                 )
             )
 
-        return {
-            "result": {
-                "success": True,
-                "message": "Successfully Fetched",
-            },
-            "data": {
-                "counts": counts,
-                "items": jsonify(items),
-            },
-        }, 200
+        return (
+            jsonify(
+                {
+                    "result": {
+                        "success": True,
+                        "message": "Successfully Fetched",
+                    },
+                    "data": {
+                        "counts": counts,
+                        "items": items,
+                    },
+                }
+            ),
+            200,
+        )
 
 
 async def fetch_info_route(linecon_id: int):
@@ -85,18 +96,25 @@ async def fetch_info_route(linecon_id: int):
 
         assert result is not None and type(result) is LineconCategoryDetailModel
 
-        return {
-            "result": {
-                "success": True,
-                "message": "Successfully Fetched",
-            },
-            "data": jsonify(result),
-        }
-    except Exception as e:
-        return {
-            "result": {
-                "success": False,
-                "message": "Failure during scrapping Line Emoticon.",
-                "error": str(e),
+        return jsonify(
+            {
+                "result": {
+                    "success": True,
+                    "message": "Successfully Fetched",
+                },
+                "data": result,
             }
-        }, 500
+        )
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "result": {
+                        "success": False,
+                        "message": "Failure during scrapping Line Emoticon.",
+                        "error": str(e),
+                    }
+                }
+            ),
+            500,
+        )
