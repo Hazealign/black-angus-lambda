@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+    - id: check-ast
+    - id: check-byte-order-marker
+    - id: check-case-conflict
+    - id: check-json
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-toml
+    - id: check-xml
+    - id: check-yaml
+    - id: debug-statements
+    - id: detect-private-key
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.3
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/asottile/yesqa
+    rev: v1.2.2
+    hooks:
+    - id: yesqa
+
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        entry: black
+        language: system
+        types: [ python ]
+
+      - id: mypy
+        name: mypy
+        exclude: |
+          (?x)^(
+            .*/templates/.*
+          )$
+        entry: mypy
+        language: system
+        types: [ python ]
