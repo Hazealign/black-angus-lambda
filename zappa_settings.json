@@ -7,8 +7,7 @@
         "runtime": "python3.9",
         "s3_bucket": "black-angus-lambda-deploy",
         "keep_warm": false,
-        "memory_size": 4096,
-        "timeout_seconds": 60
+        "timeout_seconds": 5
     },
     "production_tokyo": {
         "aws_region": "ap-northeast-1",

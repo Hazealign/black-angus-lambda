@@ -1,3 +1,4 @@
+import traceback
 from typing import List
 from urllib.parse import quote_plus
 
@@ -6,13 +7,7 @@ from flask import request, jsonify
 
 # 대충 적당한 User Agent를 넣어준다.
 from blackangus.models.v1.line import LineconCategoryModel, LineconCategoryDetailModel
-from blackangus.scrapper.v1.line import LineEmoticonScrapper
-
-FAKE_USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-    " AppleWebKit/537.36 (KHTML, like Gecko)"
-    " Chrome/103.0.0.0 Safari/537.36"
-)
+from blackangus.scrapper.v1.line import LineEmoticonScrapper, FAKE_USER_AGENT
 
 
 async def search_list_route():
@@ -86,8 +81,6 @@ async def search_list_route():
 async def fetch_info_route(linecon_id: int):
     try:
         scrapper = LineEmoticonScrapper()
-        await scrapper.initialize()
-
         result = await scrapper.scrape(
             {
                 "id": linecon_id,
@@ -106,6 +99,7 @@ async def fetch_info_route(linecon_id: int):
             }
         )
     except Exception as e:
+        traceback.print_exc()
         return (
             jsonify(
                 {

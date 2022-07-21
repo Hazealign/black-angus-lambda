@@ -1,52 +1,70 @@
-import orjson
 from typing import List, Dict, Union
+
+import lxml.html
+import orjson
 
 from blackangus.models.v1.line import LineconCategoryDetailModel, LineconItemModel
 from blackangus.scrapper.v1.base import BaseScrapper, ScrapperException
+
+FAKE_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    " AppleWebKit/537.36 (KHTML, like Gecko)"
+    " Chrome/103.0.0.0 Safari/537.36"
+)
 
 
 class LineEmoticonScrapper(BaseScrapper[LineconCategoryDetailModel]):
     async def scrape(
         self,
         arguments: Dict[str, Union[str, int]],
-    ) -> Union[LineconCategoryDetailModel, List[LineconCategoryDetailModel]]:
+    ) -> LineconCategoryDetailModel:
         linecon_id = arguments.get("id", None)
 
         if linecon_id is None or type(linecon_id) is not int:
             raise ScrapperException("지정된 라인 이모티콘 ID가 없습니다.")
 
-        page = await self.create_page()
-        await page.goto(
-            f"https://line.me/S/sticker/{linecon_id}/?lang=ko&ref=gnsh_stickerDetail",
-            wait_until="networkidle",
+        response = await self.httpx.get(
+            f"https://store.line.me/stickershop/product/{linecon_id}/ko",
+            timeout=None,
+            headers={
+                "User-Agent": FAKE_USER_AGENT,
+                "X-Requested-With": "XMLHttpRequest",
+                "Accept-Language": "ko-KR,ko;q=0.9",
+            },
         )
 
-        title = await page.inner_text("p.mdCMN38Item01Ttl")
-        description = await page.inner_text("p.mdCMN38Item01Txt")
-        author = await page.inner_text("a.mdCMN38Item01Author")
+        root_element = lxml.html.fromstring(response.content)
+
+        title_candidates = root_element.cssselect("p.mdCMN38Item01Ttl")
+        if title_candidates is None or len(title_candidates) == 0:
+            raise ScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+        title: str = title_candidates[0].text_content()
+
+        description_candidates = root_element.cssselect("p.mdCMN38Item01Txt")
+        if description_candidates is None or len(description_candidates) == 0:
+            raise ScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+        description: str = description_candidates[0].text_content()
+
+        author_candidates = root_element.cssselect("a.mdCMN38Item01Author")
+        if author_candidates is None or len(author_candidates) == 0:
+            raise ScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+        author: str = author_candidates[0].text_content()
 
         items: List[LineconItemModel] = []
-        json_strings = await page.evaluate(
-            """
-            () => Array.from(
-                document.querySelectorAll('li.mdCMN09Li.FnStickerPreviewItem')
-            ).map(item => item.attributes['data-preview'].value)
-        """
-        )
+        item_candidates = root_element.cssselect("li.mdCMN09Li.FnStickerPreviewItem")
+        for candidate in item_candidates:
+            data_string = candidate.attrib.get("data-preview", None)
+            if data_string is None:
+                continue
 
-        for json_string in json_strings:
-            json_value = orjson.loads(json_string)
+            data = orjson.loads(data_string)
 
-            item_id = json_value["id"]
-            item_type = json_value["type"]
+            item_id = data["id"]
+            item_type = data["type"]
             item_url = (
-                json_value["animationUrl"]
-                if item_type.__contains__("animation")
-                else json_value["staticUrl"]
+                data["animationUrl"] if "animation" == item_type else data["staticUrl"]
             )
-            item_sound_url = (
-                None if json_value["soundUrl"] == "" else json_value["soundUrl"]
-            )
+            item_sound_url = None if data["soundUrl"] == "" else data["soundUrl"]
 
             items.append(
                 LineconItemModel(
