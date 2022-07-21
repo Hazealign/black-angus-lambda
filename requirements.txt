@@ -19,3 +19,4 @@ black==22.6.0
 time-machine==2.7.1
 types-orjson==3.6.2
 isort==5.10.1
+awslambdaric==2.0.4

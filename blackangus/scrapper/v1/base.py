@@ -1,4 +1,5 @@
 import abc
+import os
 from typing import TypeVar, Generic, Optional, List, Union, Dict
 
 from playwright.async_api import async_playwright, Playwright, Browser, Page
@@ -24,7 +25,29 @@ class BaseScrapper(Generic[T], metaclass=abc.ABCMeta):
             self.playwright_instance = await self.playwright_manager.start()
 
         if self.browser is None:
-            self.browser = await self.playwright_instance.chromium.launch()
+            executable_path = (
+                self.playwright_instance.chromium.executable_path
+                if os.environ.get("IS_AWS_LAMBDA", None) is None
+                else "/var/task/bin/headless-chromium"
+            )
+
+            self.browser = await self.playwright_instance.chromium.launch(
+                headless=True,
+                executable_path=executable_path,
+                args=[
+                    "--headless",
+                    "--disable-gpu",
+                    "--single-process",
+                    "--no-sandbox",
+                    "--window-size=1920,1200",
+                    "--disable-extensions",
+                    "--incognito",
+                    "--v=99",
+                    "--no-zygote",
+                    "--deterministic-fetch",
+                    "--disable-dev-shm-usage",
+                ],
+            )
 
     # 페이지를 만들 때는 스텔싱을 위해 이걸 쓴다.
     async def create_page(self) -> Page:
