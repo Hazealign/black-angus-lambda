@@ -299,3 +299,4 @@ cython_debug/
 config.toml
 bin/
 zappa_settings.py
+zappa_settings.json
