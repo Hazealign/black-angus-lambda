@@ -18,18 +18,26 @@ provider:
   stage: tokyo
   runtime: python3.9
   region: ${param:region}
-  architecture: arm64
+  architecture: ${param:architecture}
 
 params:
   tokyo:
     region: 'ap-northeast-1'
+    architecture: 'arm64'
+    docker_architecture: ['--platform', 'linux/arm64/v8']
   seoul:
     region: 'ap-northeast-2'
+    architecture: 'x86_64'
+    docker_architecture: ['--platform', 'linux/amd64']
 
 custom:
   pythonRequirements:
+    # disable cache cause of each region using different architecture
+    useDownloadCache: false
+    useStaticCache: false
     dockerizePip: non-linux
     dockerImage: public.ecr.aws/sam/emulation-python3.9:latest
+    dockerRunCmdExtraArgs: ${param:docker_architecture}
     zip: false
 
 functions:
