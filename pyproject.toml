@@ -7,14 +7,14 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = {extras = ["all"], version = "^0.79.0"}
+fastapi = "^0.79.0"
 pydantic = "^1.9.1"
 httpx = "^0.23.0"
 lxml = "^4.9.1"
-orjson = "^3.7.9"
 cssselect = "^1.1.0"
 mangum = "^0.15.0"
 uvicorn = {extras = ["standard"], version = "^0.17.0"}
+ujson = "^5.4.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.971"
@@ -31,13 +31,12 @@ types-orjson = "^3.6.2"
 isort = "^5.10.1"
 types-lxml = "^2022.4.10"
 pytest-httpx = "^0.21.0"
+orjson = "^3.7.9"
+types-ujson = "^5.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-server = ""
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'

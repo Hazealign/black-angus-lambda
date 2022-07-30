@@ -1,7 +1,7 @@
 from typing import List
 
 import lxml.html
-import orjson
+import ujson
 from fastapi import HTTPException
 
 from blackangus.models.v1.line import LineconCategoryDetailModel, LineconItemModel
@@ -69,7 +69,9 @@ class LineEmoticonScrapper(BaseScrapper[int, LineconCategoryDetailModel]):
             if data_string is None:
                 continue
 
-            data = orjson.loads(data_string)
+            # we don't use orjson cause of in lambda environment,
+            # it's difficult to provide to build with Rust.
+            data = ujson.loads(data_string)
 
             item_id = data["id"]
             item_type = data["type"]

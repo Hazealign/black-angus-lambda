@@ -299,3 +299,8 @@ cython_debug/
 config.toml
 bin/
 obsoleted/
+
+package.json
+package-lock.json
+node_modules/
+.serverless/
