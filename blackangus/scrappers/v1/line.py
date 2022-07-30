@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List
 
 import lxml.html
 import orjson
@@ -17,18 +17,13 @@ class LineScrapperException(Exception):
     pass
 
 
-class LineEmoticonScrapper(BaseScrapper[LineconCategoryDetailModel]):
+class LineEmoticonScrapper(BaseScrapper[int, LineconCategoryDetailModel]):
     async def scrape(
         self,
-        arguments: Dict[str, Union[str, int]],
+        value: int,
     ) -> LineconCategoryDetailModel:
-        linecon_id = arguments.get("id", None)
-
-        if linecon_id is None or type(linecon_id) is not int:
-            raise LineScrapperException("지정된 라인 이모티콘 ID가 없습니다.")
-
         response = await self.httpx.get(
-            f"https://store.line.me/stickershop/product/{linecon_id}/ko",
+            f"https://store.line.me/stickershop/product/{value}/ko",
             timeout=None,
             headers={
                 "User-Agent": FAKE_USER_AGENT,
@@ -41,17 +36,17 @@ class LineEmoticonScrapper(BaseScrapper[LineconCategoryDetailModel]):
 
         title_candidates = root_element.cssselect("p.mdCMN38Item01Ttl")
         if title_candidates is None or len(title_candidates) == 0:
-            raise LineScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
         title: str = title_candidates[0].text_content()
 
         description_candidates = root_element.cssselect("p.mdCMN38Item01Txt")
         if description_candidates is None or len(description_candidates) == 0:
-            raise LineScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
         description: str = description_candidates[0].text_content()
 
         author_candidates = root_element.cssselect("a.mdCMN38Item01Author")
         if author_candidates is None or len(author_candidates) == 0:
-            raise LineScrapperException("라인 이모티콘 ID로 나온 결과가 없습니다.")
+            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
         author: str = author_candidates[0].text_content()
 
         items: List[LineconItemModel] = []
@@ -80,7 +75,7 @@ class LineEmoticonScrapper(BaseScrapper[LineconCategoryDetailModel]):
             )
 
         return LineconCategoryDetailModel(
-            item_id=linecon_id,
+            item_id=value,
             title=title,
             description=description,
             author=author,

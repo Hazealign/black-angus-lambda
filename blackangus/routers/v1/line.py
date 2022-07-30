@@ -83,11 +83,8 @@ async def search_list_route(
 @router.get("/{item_id}", response_model=ValuedResponse[LineconCategoryDetailModel])
 async def fetch_info_route(item_id: int) -> ValuedResponse[LineconCategoryDetailModel]:
     scrapper = LineEmoticonScrapper()
-    result = await scrapper.scrape(
-        {
-            "id": item_id,
-        }
-    )
+    result = await scrapper.scrape(item_id)
+    await scrapper.finalize()
 
     return ValuedResponse(
         result=SUCCESS_DEFAULT_RESPONSE,

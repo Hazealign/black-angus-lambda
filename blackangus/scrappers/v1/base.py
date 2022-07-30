@@ -1,13 +1,14 @@
 import abc
-from typing import TypeVar, Generic, Union, Dict
+from typing import TypeVar, Generic
 
 from httpx import AsyncClient
 
 # 데이터 모델의 제네릭 타입 변수
-T = TypeVar("T")
+Arguments = TypeVar("Arguments")
+Response = TypeVar("Response")
 
 
-class BaseScrapper(Generic[T], metaclass=abc.ABCMeta):
+class BaseScrapper(Generic[Arguments, Response], metaclass=abc.ABCMeta):
     httpx: AsyncClient
 
     def __init__(self):
@@ -17,5 +18,5 @@ class BaseScrapper(Generic[T], metaclass=abc.ABCMeta):
         await self.httpx.aclose()
 
     @abc.abstractmethod
-    async def scrape(self, arguments: Dict[str, Union[str, int]]) -> T:
+    async def scrape(self, value: Arguments) -> Response:
         pass
