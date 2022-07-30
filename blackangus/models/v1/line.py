@@ -1,26 +1,29 @@
-import dataclasses
 from typing import List, Optional
 
+from pydantic import BaseModel
 
-@dataclasses.dataclass(frozen=True)
-class LineconCategoryModel:
+
+class LineconCategoryModel(BaseModel):
     title: str
     id: int
     link: str
 
 
-@dataclasses.dataclass(frozen=True)
-class LineconItemModel:
+class LineconItemModel(BaseModel):
     type: str
     item_id: str
     url: str
     sound_url: Optional[str]
 
 
-@dataclasses.dataclass(frozen=True)
-class LineconCategoryDetailModel:
+class LineconCategoryDetailModel(BaseModel):
     item_id: int
     title: str
     description: str
     author: str
     items: List[LineconItemModel]
+
+
+class LineconCategoriesWithCountModel(BaseModel):
+    counts: int
+    items: List[LineconCategoryModel]
