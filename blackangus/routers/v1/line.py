@@ -15,17 +15,6 @@ from blackangus.scrappers.v1.line import LineEmoticonScrapper, FAKE_USER_AGENT
 router = APIRouter(
     prefix="/api/v1/line",
     tags=["LineEmoticon"],
-    responses={
-        404: (
-            {
-                "result": {
-                    "success": False,
-                    "message": "Not Found",
-                }
-            }
-        ),
-        400: ({"result": {"success": False, "message": "Invalid Request Parameters"}}),
-    },
 )
 
 
@@ -56,6 +45,12 @@ async def search_list_route(
             },
         )
 
+        if not response.is_success:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Server returned invalid status code.",
+            )
+
         body = response.json()
 
     counts = body.get("totalCount", 0)
@@ -83,7 +78,7 @@ async def search_list_route(
 @router.get("/{item_id}", response_model=ValuedResponse[LineconCategoryDetailModel])
 async def fetch_info_route(item_id: int) -> ValuedResponse[LineconCategoryDetailModel]:
     scrapper = LineEmoticonScrapper()
-    result = await scrapper.scrape(item_id)
+    result = await scrapper.scrap(item_id)
     await scrapper.finalize()
 
     return ValuedResponse(

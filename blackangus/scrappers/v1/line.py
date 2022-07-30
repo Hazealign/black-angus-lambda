@@ -2,9 +2,10 @@ from typing import List
 
 import lxml.html
 import orjson
+from fastapi import HTTPException
 
 from blackangus.models.v1.line import LineconCategoryDetailModel, LineconItemModel
-from blackangus.scrappers.v1.base import BaseScrapper
+from .base import BaseScrapper
 
 FAKE_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
@@ -18,7 +19,7 @@ class LineScrapperException(Exception):
 
 
 class LineEmoticonScrapper(BaseScrapper[int, LineconCategoryDetailModel]):
-    async def scrape(
+    async def scrap(
         self,
         value: int,
     ) -> LineconCategoryDetailModel:
@@ -32,21 +33,33 @@ class LineEmoticonScrapper(BaseScrapper[int, LineconCategoryDetailModel]):
             },
         )
 
-        root_element = lxml.html.fromstring(response.content)
+        if not response.is_success:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Server returned invalid status code.",
+            )
+
+        root_element = lxml.html.fromstring(response.text)
 
         title_candidates = root_element.cssselect("p.mdCMN38Item01Ttl")
         if title_candidates is None or len(title_candidates) == 0:
-            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
+            raise LineScrapperException(
+                f"Can't find any result from Line Sticker ID: {value}"
+            )
         title: str = title_candidates[0].text_content()
 
         description_candidates = root_element.cssselect("p.mdCMN38Item01Txt")
         if description_candidates is None or len(description_candidates) == 0:
-            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
+            raise LineScrapperException(
+                f"Can't find any result from Line Sticker ID: {value}"
+            )
         description: str = description_candidates[0].text_content()
 
         author_candidates = root_element.cssselect("a.mdCMN38Item01Author")
         if author_candidates is None or len(author_candidates) == 0:
-            raise LineScrapperException(f"지정된 라인 이모티콘 ID: {value}에서 나온 결과가 없습니다.")
+            raise LineScrapperException(
+                f"Can't find any result from Line Sticker ID: {value}"
+            )
         author: str = author_candidates[0].text_content()
 
         items: List[LineconItemModel] = []
