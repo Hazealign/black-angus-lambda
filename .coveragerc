@@ -1,0 +1,10 @@
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if TYPE_CHECKING:
+omit =
+    blackangus/mypy_plugin
+    blackangus/models
+    blackangus/app.py

@@ -18,5 +18,5 @@ class BaseScrapper(Generic[Arguments, Response], metaclass=abc.ABCMeta):
         await self.httpx.aclose()
 
     @abc.abstractmethod
-    async def scrape(self, value: Arguments) -> Response:
+    async def scrap(self, value: Arguments) -> Response:
         pass

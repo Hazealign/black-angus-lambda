@@ -38,3 +38,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 server = ""
+
+[tool.pytest.ini_options]
+asyncio_mode = 'auto'
