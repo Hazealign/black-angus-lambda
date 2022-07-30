@@ -1,32 +1,42 @@
-import traceback
-from typing import List
+from typing import List, Union
 from urllib.parse import quote_plus
 
 import httpx
-from flask import request, jsonify
+from fastapi import APIRouter, HTTPException
 
-# 대충 적당한 User Agent를 넣어준다.
-from blackangus.models.v1.line import LineconCategoryModel, LineconCategoryDetailModel
+from blackangus.models.v1 import ValuedResponse, SUCCESS_DEFAULT_RESPONSE
+from blackangus.models.v1.line import (
+    LineconCategoryModel,
+    LineconCategoryDetailModel,
+    LineconCategoriesWithCountModel,
+)
 from blackangus.scrapper.v1.line import LineEmoticonScrapper, FAKE_USER_AGENT
 
-
-async def search_list_route():
-    keyword = request.args.get("keyword", None)
-    page = int(request.args.get("page", "1"))
-    limit = int(request.args.get("limit", "10"))
-
-    if keyword is None:
-        return (
-            jsonify(
-                {
-                    "result": {
-                        "success": False,
-                        "message": "Invalid Request Parameters",
-                    }
+router = APIRouter(
+    prefix="/api/v1/line",
+    tags=["LineEmoticon"],
+    responses={
+        404: (
+            {
+                "result": {
+                    "success": False,
+                    "message": "Not Found",
                 }
-            ),
-            400,
-        )
+            }
+        ),
+        400: ({"result": {"success": False, "message": "Invalid Request Parameters"}}),
+    },
+)
+
+
+@router.get("/list", response_model=ValuedResponse[LineconCategoriesWithCountModel])
+async def search_list_route(
+    keyword: Union[str, None] = None,
+    page: int = 1,
+    limit: int = 10,
+) -> ValuedResponse[LineconCategoriesWithCountModel]:
+    if keyword is None:
+        raise HTTPException(status_code=400, detail="keyword value must be not None.")
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -48,67 +58,38 @@ async def search_list_route():
 
         body = response.json()
 
-        counts = body.get("totalCount", 0)
-        primitive_items = body.get("items", [])
-        items: List[LineconCategoryModel] = []
+    counts = body.get("totalCount", 0)
+    primitive_items = body.get("items", [])
+    items: List[LineconCategoryModel] = []
 
-        for item in primitive_items:
-            items.append(
-                LineconCategoryModel(
-                    title=item["title"],
-                    id=int(item["id"]),
-                    link=f'https://store.line.me/stickershop/product/{item["id"]}/ko',
-                )
+    for item in primitive_items:
+        items.append(
+            LineconCategoryModel(
+                title=item["title"],
+                id=int(item["id"]),
+                link=f'https://store.line.me/stickershop/product/{item["id"]}/ko',
             )
-
-        return (
-            jsonify(
-                {
-                    "result": {
-                        "success": True,
-                        "message": "Successfully Fetched",
-                    },
-                    "data": {
-                        "counts": counts,
-                        "items": items,
-                    },
-                }
-            ),
-            200,
         )
 
+    return ValuedResponse(
+        result=SUCCESS_DEFAULT_RESPONSE,
+        data=LineconCategoriesWithCountModel(
+            counts=counts,
+            items=items,
+        ),
+    )
 
-async def fetch_info_route(linecon_id: int):
-    try:
-        scrapper = LineEmoticonScrapper()
-        result = await scrapper.scrape(
-            {
-                "id": linecon_id,
-            }
-        )
 
-        assert result is not None and type(result) is LineconCategoryDetailModel
+@router.get("/{item_id}", response_model=ValuedResponse[LineconCategoryDetailModel])
+async def fetch_info_route(item_id: int) -> ValuedResponse[LineconCategoryDetailModel]:
+    scrapper = LineEmoticonScrapper()
+    result = await scrapper.scrape(
+        {
+            "id": item_id,
+        }
+    )
 
-        return jsonify(
-            {
-                "result": {
-                    "success": True,
-                    "message": "Successfully Fetched",
-                },
-                "data": result,
-            }
-        )
-    except Exception as e:
-        traceback.print_exc()
-        return (
-            jsonify(
-                {
-                    "result": {
-                        "success": False,
-                        "message": "Failure during scrapping Line Emoticon.",
-                        "error": str(e),
-                    }
-                }
-            ),
-            500,
-        )
+    return ValuedResponse(
+        result=SUCCESS_DEFAULT_RESPONSE,
+        data=result,
+    )

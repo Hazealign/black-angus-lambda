@@ -7,10 +7,6 @@ from httpx import AsyncClient
 T = TypeVar("T")
 
 
-class ScrapperException(BaseException):
-    pass
-
-
 class BaseScrapper(Generic[T], metaclass=abc.ABCMeta):
     httpx: AsyncClient
 
