@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse
 
-from blackangus.routes.v1 import line
-from blackangus.scrapper.v1.line import LineScrapperException
+from blackangus.routers.v1 import line
+from blackangus.scrappers.v1.line import LineScrapperException
 
 app = FastAPI(
     title="Black Angus Lambda",
