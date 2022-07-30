@@ -22,10 +22,12 @@ router = APIRouter(
 async def search_list_route(
     keyword: Union[str, None] = None,
     page: int = 1,
-    limit: int = 10,
+    count: int = 10,
 ) -> ValuedResponse[LineconCategoriesWithCountModel]:
     if keyword is None:
-        raise HTTPException(status_code=400, detail="keyword value must be not None.")
+        raise HTTPException(
+            status_code=400, detail="'keyword' query field must be not empty."
+        )
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -38,8 +40,8 @@ async def search_list_route(
             },
             params={
                 "query": keyword,
-                "offset": f"{limit * (page - 1)}",
-                "limit": f"{limit}",
+                "offset": f"{count * (page - 1)}",
+                "limit": f"{count}",
                 "type": "ALL",
                 "includeFacets": "true",
             },
