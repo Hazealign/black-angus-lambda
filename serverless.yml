@@ -1,0 +1,43 @@
+service: black-angus-lambda
+
+plugins:
+  - serverless-offline
+  - serverless-secrets
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+
+package:
+  exclude:
+    - node_modules/**
+    - .serverless/**
+    - .mypy_cache/**
+    - .pytest_cache/**
+
+provider:
+  name: aws
+  stage: tokyo
+  runtime: python3.9
+  region: ${param:region}
+  architecture: arm64
+
+params:
+  tokyo:
+    region: 'ap-northeast-1'
+  seoul:
+    region: 'ap-northeast-2'
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    dockerImage: public.ecr.aws/sam/emulation-python3.9:latest
+    zip: false
+
+functions:
+  index:
+    memorySize: 512
+    timeout: 5
+    handler: app.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
