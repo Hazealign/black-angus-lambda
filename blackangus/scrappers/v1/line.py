@@ -4,7 +4,7 @@ import lxml.html
 import orjson
 
 from blackangus.models.v1.line import LineconCategoryDetailModel, LineconItemModel
-from blackangus.scrapper.v1.base import BaseScrapper
+from blackangus.scrappers.v1.base import BaseScrapper
 
 FAKE_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"

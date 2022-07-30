@@ -10,7 +10,7 @@ from blackangus.models.v1.line import (
     LineconCategoryDetailModel,
     LineconCategoriesWithCountModel,
 )
-from blackangus.scrapper.v1.line import LineEmoticonScrapper, FAKE_USER_AGENT
+from blackangus.scrappers.v1.line import LineEmoticonScrapper, FAKE_USER_AGENT
 
 router = APIRouter(
     prefix="/api/v1/line",
